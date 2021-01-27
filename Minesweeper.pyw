@@ -11,7 +11,6 @@ will fail the game if flags are in incorrect positions.
 The number on the top left shows how many mines there are left and the number
 on top right shows how many safe squares are unrevealed. The spinbox on the top
 can be used to adjust the amount of mines.
-This was an advanced GUI-program.
 """
 from tkinter import *
 import random
