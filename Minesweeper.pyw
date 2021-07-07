@@ -16,10 +16,24 @@ from tkinter import *
 import random
 import time
 from decimal import Decimal
+from datetime import datetime
+import os
+import json
 
 IMAGE_FILES = ['0.png', '1.png', '2.png', '3.png', '4.png', '5.png', '6.png',
                '7.png', '8.png', 'bomb.png', 'empty.png', 'flagged.png',
                'explodedBomb.png']
+SAVE_FOLDER = f"{os.path.expanduser('~/Documents/My Games')}{os.sep}Minesweeper Python"
+SAVE_FILE = f"{SAVE_FOLDER}{os.sep}saves.json"
+if not os.path.exists(SAVE_FOLDER):
+    os.makedirs(SAVE_FOLDER)
+if not os.path.exists(SAVE_FILE):
+    # Make empty file
+    temp_dict = {}
+    for i in range(100):
+        temp_dict[i] = []
+    with open(SAVE_FILE, "w", encoding="utf-8") as file:
+        json.dump(temp_dict, file, indent=2, ensure_ascii=False)
 
 
 # Add timer
@@ -30,6 +44,13 @@ class Timer:
         self.__start_time = time.time()
         self.__started = False
         self.__end_time = 0
+
+    def get_time(self):
+        """
+        Returns the precise time in seconds
+        :return: float, time
+        """
+        return self.__end_time - self.__start_time
 
     def get_time_as_string(self):
         """
@@ -90,6 +111,7 @@ class Timer:
 
 class Minesweeper:
     def __init__(self):
+        self.__has_won = False
         self.__squares = []
         self.__square_coordinates = {}
         self.__marked_squares = []
@@ -107,8 +129,8 @@ class Minesweeper:
                                    font=("Default", 25))
         self.__mines_label.grid(row=0, column=0, columnspan=1)
         self.__undiscovered_squares = Label(self.__main_window,
-                                            text=self.__undiscovered_mines ** 2
-                                            , font=("Default", 25))
+                                            text=self.__undiscovered_mines ** 2,
+                                            font=("Default", 25))
         self.__undiscovered_squares.grid(row=0, column=self.__size - 1, columnspan=1)
         self.__restart_button = Button(self.__main_window,
                                        text="Restart", command=self.start_game, bg="#FF8EA5")
@@ -128,6 +150,8 @@ class Minesweeper:
         self.__timer_label = Label(self.__main_window, text="00:00:00", font=("Default", 20))
         self.__timer_label.grid(row=1, column=int((self.__size / 2) - 2), columnspan=4)
         self.__timer = Timer(self.__timer_label)
+        self.__highscores = {}
+        self.read_highscores()
         self.start_game()
         self.__main_window.mainloop()
 
@@ -232,8 +256,9 @@ class Minesweeper:
             # If square has no mines next to it, reveal empty squares nearby
             if mines == 0 and check_adjacent:
                 self.activate_adjacent_squares(square)
-            # Check for win after every successful click
-            self.check_win()
+            if check_adjacent:
+                # Check for win after every successful click if check adjacent is True
+                self.check_win()
 
     def calculate_mines_and_flags(self, square):
         """
@@ -311,9 +336,16 @@ class Minesweeper:
         Checks if player has won and activates the ending
         :return: nothing
         """
+        if self.__has_won:
+            return
         # If there are no unrevealed safe squares left, the player has won
         if self.__undiscovered_squares.cget("text") <= 0:
+            self.__has_won = True
             self.end_game("You win")
+            time_now = datetime.now()
+            self.__highscores.get(str(self.__undiscovered_mines)).append(
+                {"time": self.__timer.get_time(), "datetime": (time_now.timestamp()), "datetime_readable": time_now.replace(microsecond=0).isoformat()})
+            self.save_highscores()
 
     def generate_mines(self, exclude=-1):
         """
@@ -335,6 +367,7 @@ class Minesweeper:
         Starts or restarts the game and sets all the values accordingly
         :return: nothing
         """
+        self.__has_won = False
         # Delete old squares
         for square in self.__squares:
             square.destroy()
@@ -372,6 +405,29 @@ class Minesweeper:
         self.__undiscovered_squares.configure(
             text=self.__size ** 2 - self.__undiscovered_mines)
         self.__ending_text.configure(text="")
+
+    def read_highscores(self):
+        """
+        Gets highscores
+        :return: nothing
+        """
+        with open(SAVE_FILE, "r", encoding="utf-8") as save_file:
+            self.__highscores = json.load(save_file)
+
+    def save_highscores(self):
+        """
+        Saves highscores
+        :return: nothing
+        """
+        # Check that every size has at max 10 best scores
+        for size in self.__highscores:
+            # Sort each list by times
+            scores = sorted(self.__highscores.get(size), key=lambda k: k.get("time"))
+            self.__highscores[size] = scores[:10]
+            if len(scores) > 10:
+                self.__highscores[size] = scores[:10]
+        with open(SAVE_FILE, "w", encoding="utf-8") as save_file:
+            json.dump(self.__highscores, save_file, indent=2, ensure_ascii=False)
 
 
 def main():
