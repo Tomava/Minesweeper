@@ -14,10 +14,78 @@ can be used to adjust the amount of mines.
 """
 from tkinter import *
 import random
+import time
+from decimal import Decimal
 
 IMAGE_FILES = ['0.png', '1.png', '2.png', '3.png', '4.png', '5.png', '6.png',
                '7.png', '8.png', 'bomb.png', 'empty.png', 'flagged.png',
                'explodedBomb.png']
+
+
+# Add timer
+# Add symbols for numbers
+class Timer:
+    def __init__(self, timer_label):
+        self.__timer_label = timer_label
+        self.__start_time = time.time()
+        self.__started = False
+        self.__end_time = 0
+
+    def get_time_as_string(self):
+        """
+        Returns elapsed time as a string
+        :return: str, HH:MM:SS
+        """
+        elapsed_seconds = time.time() - self.__start_time
+        return time.strftime("%H:%M:%S", time.gmtime(elapsed_seconds))
+
+    def get_time_as_string_with_precision(self):
+        """
+        Returns elapsed time as a string with milliseconds
+        :return: str, HH:MM:SS.sss
+        """
+        elapsed_seconds = time.time() - self.__start_time
+        time_string = time.strftime("%H:%M:%S", time.gmtime(elapsed_seconds))
+        # Get numbers after decimal
+        decimal_numbers = Decimal(str(elapsed_seconds)) % 1
+        # Round and remove 0 from the beginning
+        time_string += str(round(decimal_numbers, 3))[1:]
+        return time_string
+
+    def update_time(self):
+        """
+        Updates the time displayed
+        :return: nothing
+        """
+        if not self.__started:
+            return
+        self.__timer_label.configure(text=self.get_time_as_string())
+        self.__timer_label.after(1000, self.update_time)
+
+    def start(self):
+        """
+        Starts the clock
+        :return: nothing
+        """
+        self.__start_time = time.time()
+        self.__started = True
+        self.update_time()
+
+    def stop(self):
+        """
+        Stops the clock
+        :return: nothing
+        """
+        self.__end_time = time.time()
+        self.__started = False
+
+    def reset(self):
+        """
+        Resets the time
+        :return: nothing
+        """
+        self.stop()
+        self.__timer_label.configure(text="00:00:00")
 
 
 class Minesweeper:
@@ -37,26 +105,29 @@ class Minesweeper:
         self.__mines_label = Label(self.__main_window,
                                    text=self.__undiscovered_mines,
                                    font=("Default", 25))
-        self.__mines_label.grid(row=0, column=0)
+        self.__mines_label.grid(row=0, column=0, columnspan=1)
         self.__undiscovered_squares = Label(self.__main_window,
                                             text=self.__undiscovered_mines ** 2
                                             , font=("Default", 25))
-        self.__undiscovered_squares.grid(row=0, column=self.__size - 1)
+        self.__undiscovered_squares.grid(row=0, column=self.__size - 1, columnspan=1)
         self.__restart_button = Button(self.__main_window,
-                                       text="Restart", command=self.start_game)
-        self.__restart_button.grid(row=0, column=2)
+                                       text="Restart", command=self.start_game, bg="#FF8EA5")
+        self.__restart_button.grid(row=1, column=self.__size - 1)
         self.__current_mode = "Reveal"
         self.__ending_text = Label(self.__main_window, text="",
                                    font=("Default", 20))
-        self.__ending_text.grid(row=0, column=self.__size - 5,
-                                columnspan=3, padx=30)
+        self.__ending_text.grid(row=0, column=int((self.__size / 2) - 2),
+                                columnspan=4, padx=30)
         self.__mines_amount = Spinbox(self.__main_window, from_=0,
-                                      to=self.__size ** 2 - 1, width=3,
+                                      to=self.__size ** 2 - 1, width=4,
                                       wrap=True)
-        self.__mines_amount.grid(row=0, column=4)
+        self.__mines_amount.grid(row=1, column=0, columnspan=1)
         self.__mines_amount.insert(0, 1)
         # Set spinbox to readonly after inserting the right value
         self.__mines_amount.configure(state='readonly')
+        self.__timer_label = Label(self.__main_window, text="00:00:00", font=("Default", 20))
+        self.__timer_label.grid(row=1, column=int((self.__size / 2) - 2), columnspan=4)
+        self.__timer = Timer(self.__timer_label)
         self.start_game()
         self.__main_window.mainloop()
 
@@ -101,6 +172,18 @@ class Minesweeper:
             square.configure(image=self.__images[11])
             self.__mines_label.configure(text=old_value - 1)
 
+    def first_click(self, x, y):
+        """
+        Handles first click. Starts the clock and generates mines
+        :param x: int, first squares x-coordinate
+        :param y: int, first squares y-coordinate
+        :return: nothing
+        """
+        # Indexes go from left to right from top to bottom
+        index = y * self.__size + x
+        self.generate_mines(index)
+        self.__timer.start()
+
     def activate_square(self, x, y, check_adjacent=True):
         """
         Activates a given square
@@ -113,9 +196,7 @@ class Minesweeper:
         # If it's the first square to be clicked, find its index and exclude
         # it from mines which prevents losing on the first turn
         if len(self.__activated_squares) == 0:
-            # Indexes go from left to right from top to bottom
-            index = y * self.__size + x
-            self.generate_mines(index)
+            self.first_click(x, y)
         square = self.get_square(x, y)
         # Check if square is marked or activated and if it is, do nothing
         if square in self.__marked_squares:
@@ -207,6 +288,8 @@ class Minesweeper:
         :param message: str, Message to show after the ending
         :return: nothing
         """
+        self.__timer.stop()
+        self.__timer_label.configure(text=self.__timer.get_time_as_string_with_precision())
         # Activate all squares that are left and not marked
         for y in range(self.__size):
             for x in range(self.__size):
@@ -230,7 +313,7 @@ class Minesweeper:
         """
         # If there are no unrevealed safe squares left, the player has won
         if self.__undiscovered_squares.cget("text") <= 0:
-            self.end_game("You won")
+            self.end_game("You win")
 
     def generate_mines(self, exclude=-1):
         """
@@ -259,8 +342,8 @@ class Minesweeper:
         self.__square_coordinates = {}
         self.__activated_squares = []
         self.__mine_squares = []
-        self.__size = 10
         self.__undiscovered_mines = int(self.__mines_amount.get())
+        self.__timer.reset()
         for y in range(self.__size):
             for x in range(self.__size):
                 # Add right coordinates to clicks
@@ -282,7 +365,7 @@ class Minesweeper:
                 # according to the internet
                 new_square.bind("<Button-2>", right_click)
                 new_square.bind("<Button-3>", right_click)
-                new_square.grid(row=y + 1, column=x)
+                new_square.grid(row=y + 2, column=x)
                 self.__squares.append(new_square)
                 self.__square_coordinates[new_square] = [x, y]
         self.__mines_label.configure(text=self.__undiscovered_mines)
