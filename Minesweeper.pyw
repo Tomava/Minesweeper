@@ -52,20 +52,29 @@ class Timer:
         """
         return self.__end_time - self.__start_time
 
+    def get_elapsed_seconds(self):
+        """
+        Returns elapsed time as seconds
+        :return: float
+        """
+        # If timer is running, return current time
+        if self.__started:
+            return time.time() - self.__start_time
+        return self.__end_time - self.__start_time
+
     def get_time_as_string(self):
         """
         Returns elapsed time as a string
         :return: str, HH:MM:SS
         """
-        elapsed_seconds = time.time() - self.__start_time
-        return time.strftime("%H:%M:%S", time.gmtime(elapsed_seconds))
+        return time.strftime("%H:%M:%S", time.gmtime(self.get_elapsed_seconds()))
 
     def get_time_as_string_with_precision(self):
         """
         Returns elapsed time as a string with milliseconds
         :return: str, HH:MM:SS.sss
         """
-        elapsed_seconds = time.time() - self.__start_time
+        elapsed_seconds = self.get_elapsed_seconds()
         time_string = time.strftime("%H:%M:%S", time.gmtime(elapsed_seconds))
         # Get numbers after decimal
         decimal_numbers = Decimal(str(elapsed_seconds)) % 1
