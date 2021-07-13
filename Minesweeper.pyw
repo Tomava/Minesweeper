@@ -35,9 +35,10 @@ if not os.path.exists(SAVE_FILE):
     with open(SAVE_FILE, "w", encoding="utf-8") as file:
         json.dump(temp_dict, file, indent=2, ensure_ascii=False)
 
+# TODO: Add symbols for numbers
+# TODO: Show scoreboards
 
-# Add timer
-# Add symbols for numbers
+
 class Timer:
     def __init__(self, timer_label):
         self.__timer_label = timer_label
@@ -150,6 +151,8 @@ class Minesweeper:
         self.__timer_label = Label(self.__main_window, text="00:00:00", font=("Default", 20))
         self.__timer_label.grid(row=1, column=int((self.__size / 2) - 2), columnspan=4)
         self.__timer = Timer(self.__timer_label)
+        self.__scoreboard = Label(self.__main_window, text="Scoreboard:\n", font=("Default", 25))
+        self.__scoreboard.grid(row=0, column=self.__size + 1, rowspan=self.__size)
         self.__highscores = {}
         self.read_highscores()
         self.start_game()
@@ -344,8 +347,10 @@ class Minesweeper:
             self.end_game("You win")
             time_now = datetime.now()
             self.__highscores.get(str(self.__undiscovered_mines)).append(
-                {"time": self.__timer.get_time(), "datetime": (time_now.timestamp()), "datetime_readable": time_now.replace(microsecond=0).isoformat()})
+                {"time": self.__timer.get_time(), "time_readable": self.__timer.get_time_as_string_with_precision(),
+                 "datetime": (time_now.timestamp()), "datetime_readable": time_now.replace(microsecond=0).isoformat()})
             self.save_highscores()
+            self.update_scoreboard()
 
     def generate_mines(self, exclude=-1):
         """
@@ -405,6 +410,7 @@ class Minesweeper:
         self.__undiscovered_squares.configure(
             text=self.__size ** 2 - self.__undiscovered_mines)
         self.__ending_text.configure(text="")
+        self.update_scoreboard()
 
     def read_highscores(self):
         """
@@ -428,6 +434,14 @@ class Minesweeper:
                 self.__highscores[size] = scores[:10]
         with open(SAVE_FILE, "w", encoding="utf-8") as save_file:
             json.dump(self.__highscores, save_file, indent=2, ensure_ascii=False)
+
+    def update_scoreboard(self):
+        self.__scoreboard.configure(text="Scoreboard:\n")
+        for i, score in enumerate(self.__highscores.get(str(self.__undiscovered_mines))):
+            score_time = score.get("time_readable")
+            datetime_readable = datetime.fromisoformat(score.get("datetime_readable"))
+            self.__scoreboard.configure(text=f"{self.__scoreboard.cget('text')}"
+                                             f"{i + 1}: {score_time} ({datetime_readable})\n")
 
 
 def main():
