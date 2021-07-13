@@ -22,7 +22,7 @@ import json
 
 IMAGE_FILES = ['0.png', '1.png', '2.png', '3.png', '4.png', '5.png', '6.png',
                '7.png', '8.png', 'bomb.png', 'empty.png', 'flagged.png',
-               'explodedBomb.png']
+               'exploded_bomb.png', 'flag_icon.png', 'empty_icon.png']
 SAVE_FOLDER = f"{os.path.expanduser('~/Documents/My Games')}{os.sep}Minesweeper Python"
 SAVE_FILE = f"{SAVE_FOLDER}{os.sep}saves.json"
 if not os.path.exists(SAVE_FOLDER):
@@ -35,8 +35,7 @@ if not os.path.exists(SAVE_FILE):
     with open(SAVE_FILE, "w", encoding="utf-8") as file:
         json.dump(temp_dict, file, indent=2, ensure_ascii=False)
 
-# TODO: Add symbols for numbers
-# TODO: Show scoreboards
+# TODO: Add frames
 
 
 class Timer:
@@ -125,17 +124,21 @@ class Minesweeper:
         for image in IMAGE_FILES:
             new_image = PhotoImage(file=f"images/{image}")
             self.__images.append(new_image)
+        self.__mines_icon = Label(self.__main_window, image=self.__images[13], font=("Default", 25))
+        self.__mines_icon.grid(row=0, column=1, columnspan=1)
         self.__mines_label = Label(self.__main_window,
                                    text=self.__undiscovered_mines,
                                    font=("Default", 25))
         self.__mines_label.grid(row=0, column=0, columnspan=1)
+        self.__undiscovered_icon = Label(self.__main_window, image=self.__images[14], font=("Default", 25))
+        self.__undiscovered_icon.grid(row=0, column=self.__size - 2, columnspan=1)
         self.__undiscovered_squares = Label(self.__main_window,
                                             text=self.__undiscovered_mines ** 2,
                                             font=("Default", 25))
         self.__undiscovered_squares.grid(row=0, column=self.__size - 1, columnspan=1)
         self.__restart_button = Button(self.__main_window,
                                        text="Restart", command=self.start_game, bg="#FF8EA5")
-        self.__restart_button.grid(row=1, column=self.__size - 1)
+        self.__restart_button.grid(row=1, column=self.__size - 1, sticky="new")
         self.__current_mode = "Reveal"
         self.__ending_text = Label(self.__main_window, text="",
                                    font=("Default", 20))
