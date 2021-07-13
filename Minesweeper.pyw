@@ -442,9 +442,9 @@ class Minesweeper:
         self.__scoreboard.configure(text="Scoreboard:\n")
         for i, score in enumerate(self.__highscores.get(str(self.__undiscovered_mines))):
             score_time = score.get("time_readable")
-            datetime_readable = datetime.fromisoformat(score.get("datetime_readable"))
+            score_datetime = datetime.fromtimestamp(score.get("datetime"))
             self.__scoreboard.configure(text=f"{self.__scoreboard.cget('text')}"
-                                             f"{i + 1}: {score_time} ({datetime_readable})\n")
+                                             f"{i + 1}: {score_time} ({score_datetime.strftime('%Y-%m-%d')})\n")
 
 
 def main():
