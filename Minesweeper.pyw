@@ -135,27 +135,19 @@ class Minesweeper:
             self.__images.append(new_image)
         self.__mines_icon = Label(self.__main_window, image=self.__images[13], font=("Default", 25))
         self.__mines_icon.grid(row=0, column=1, columnspan=1)
-        self.__mines_label = Label(self.__main_window,
-                                   text=self.__undiscovered_mines,
-                                   font=("Default", 25))
+        self.__mines_label = Label(self.__main_window, text=self.__undiscovered_mines, font=("Default", 25))
         self.__mines_label.grid(row=0, column=0, columnspan=1)
         self.__undiscovered_icon = Label(self.__main_window, image=self.__images[14], font=("Default", 25))
         self.__undiscovered_icon.grid(row=0, column=self.__size - 2, columnspan=1)
-        self.__undiscovered_squares = Label(self.__main_window,
-                                            text=self.__undiscovered_mines ** 2,
+        self.__undiscovered_squares = Label(self.__main_window, text=self.__undiscovered_mines ** 2,
                                             font=("Default", 25))
         self.__undiscovered_squares.grid(row=0, column=self.__size - 1, columnspan=1)
-        self.__restart_button = Button(self.__main_window,
-                                       text="Restart", command=self.start_game, bg="#FF8EA5")
+        self.__restart_button = Button(self.__main_window, text="Restart", command=self.start_game, bg="#FF8EA5")
         self.__restart_button.grid(row=1, column=self.__size - 1, sticky="new")
         self.__current_mode = "Reveal"
-        self.__ending_text = Label(self.__main_window, text="",
-                                   font=("Default", 20))
-        self.__ending_text.grid(row=0, column=int((self.__size / 2) - 2),
-                                columnspan=4, padx=30)
-        self.__mines_amount = Spinbox(self.__main_window, from_=0,
-                                      to=self.__size ** 2 - 1, width=4,
-                                      wrap=True)
+        self.__ending_text = Label(self.__main_window, text="", font=("Default", 20))
+        self.__ending_text.grid(row=0, column=int((self.__size / 2) - 2), columnspan=4, padx=30)
+        self.__mines_amount = Spinbox(self.__main_window, from_=0, to=self.__size ** 2 - 1, width=4, wrap=True)
         self.__mines_amount.grid(row=1, column=0, columnspan=1)
         self.__mines_amount.insert(0, 1)
         # Set spinbox to readonly after inserting the right value
@@ -240,8 +232,7 @@ class Minesweeper:
         # Check if square is marked or activated and if it is, do nothing
         if square in self.__marked_squares:
             return
-        # Check if square has the right amount of flags around it and activate
-        # adjacent squares if there are
+        # Check if square has the right amount of flags around it and activate adjacent squares if there are
         # Will fail the game if flags are in incorrect positions
         elif square in self.__activated_squares:
             mines, flags = self.calculate_mines_and_flags(square)
@@ -252,13 +243,11 @@ class Minesweeper:
         # If square is a mine, end the game
         if square in self.__mine_squares:
             # If the game hasn't ended set current mine to exploded mine
-            # Use check_adjacent parameter as it's set to False after the game
-            # ends
+            # Use check_adjacent parameter as it's set to False after the game ends
             if check_adjacent:
                 square.configure(image=self.__images[12])
             else:
-                # If the game already ended, set the rest of the mines to
-                # normal mines
+                # If the game already ended, set the rest of the mines to normal mines
                 square.configure(image=self.__images[9])
             self.end_game("You lose")
         # If square is safe, reveal it
@@ -318,8 +307,7 @@ class Minesweeper:
                     continue
                 else:
                     # This will recursively check all nearby squares
-                    # Squares that are out of playable area are handled by
-                    # get_square later
+                    # Squares that are out of playable area are handled by get_square later
                     self.activate_square(x, y)
 
     def end_game(self, message):
@@ -335,15 +323,13 @@ class Minesweeper:
             for x in range(self.__size):
                 square = self.get_square(x, y)
                 if square not in self.__activated_squares:
-                    # Don't activate adjacent squares as that would hang the
-                    # game
+                    # Don't activate adjacent squares as that would hang the game
                     self.activate_square(x, y, False)
                 # If square is marked and does not contain bomb, change it's icon to misplaced_flag
                 if square in self.__marked_squares and square not in self.__mine_squares:
                     square.configure(image=self.__images[15])
         self.__ending_text.configure(text=message)
-        # Unbind all label actions to stop all further inputs after the game
-        # has finished
+        # Unbind all label actions to stop all further inputs after the game has finished
         for square in self.__squares:
             square.unbind("<Button-1>")
             square.unbind("<Button-2>")
@@ -400,8 +386,7 @@ class Minesweeper:
         for y in range(self.__size):
             for x in range(self.__size):
                 # Add right coordinates to clicks
-                # Exclude first argument as it's given automatically and not
-                # needed
+                # Exclude first argument as it's given automatically and not needed
                 def left_click(_, x_coord=x, y_coord=y):
                     self.activate_square(x_coord, y_coord)
 
@@ -415,7 +400,6 @@ class Minesweeper:
                 # Bind left and right mouse buttons
                 new_square.bind("<Button-1>", left_click)
                 # Some OSes use <Button-2> and some <Button-3> as right click
-                # according to the internet
                 new_square.bind("<Button-2>", right_click)
                 new_square.bind("<Button-3>", right_click)
                 new_square.grid(row=y + 2, column=x)
