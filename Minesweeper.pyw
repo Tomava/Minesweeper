@@ -22,7 +22,7 @@ import json
 
 IMAGE_FILES = ['0.png', '1.png', '2.png', '3.png', '4.png', '5.png', '6.png',
                '7.png', '8.png', 'bomb.png', 'empty.png', 'flagged.png',
-               'exploded_bomb.png', 'flag_icon.png', 'empty_icon.png']
+               'exploded_bomb.png', 'flag_icon.png', 'empty_icon.png', 'misplaced_flag.png']
 SAVE_FOLDER = f"{os.path.expanduser('~/Documents/My Games')}{os.sep}Minesweeper Python"
 SAVE_FILE = f"{SAVE_FOLDER}{os.sep}saves.json"
 if not os.path.exists(SAVE_FOLDER):
@@ -338,6 +338,9 @@ class Minesweeper:
                     # Don't activate adjacent squares as that would hang the
                     # game
                     self.activate_square(x, y, False)
+                # If square is marked and does not contain bomb, change it's icon to misplaced_flag
+                if square in self.__marked_squares and square not in self.__mine_squares:
+                    square.configure(image=self.__images[15])
         self.__ending_text.configure(text=message)
         # Unbind all label actions to stop all further inputs after the game
         # has finished
